@@ -1,0 +1,41 @@
+version: '3' 
+
+services:
+
+  nextcloud_db:
+    image: mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    container_name: nextcloud_db
+    volumes:
+      - nextcloud_db:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - .env/nextcloud_db.env
+    restart: unless-stopped
+  
+  nextcloud_app:
+    image: nextcloud:latest
+    container_name: nextcloud_app
+    #networks:
+    #  - proxy_network
+    depends_on:
+      - nextcloud_db
+    volumes:
+      - nextcloud:/var/www/html
+      - ./app/config:/var/www/html/config
+      - ./app/custom_apps:/var/www/html/custom_apps
+      - ./app/data:/var/www/html/data
+      - ./app/themes:/var/www/html/themes
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - .env/nextcloud_app.env
+    restart: unless-stopped
+
+volumes:
+  nextcloud:
+  nextcloud_db:
+
+networks:
+  default:
+    external:
+      name: proxy_network
